@@ -1,0 +1,60 @@
+<?php
+
+function cjson_menu() {
+    $items = array();
+    $items['cjson'] = array(
+        'title' => 'Tabla JSON',
+        'page callback' => 'cjson_list',
+        'access arguments' => array('access content'),
+       );
+     return $items;
+} 
+
+function cjson_list(){
+    $data = file_get_contents('https://jsonplaceholder.typicode.com/posts');
+    $array = json_decode($data, TRUE);
+
+    $html = '<table id="table" border="1">';
+    $html .= '<tr>';
+    foreach($array[0] as $key=>$value){
+        $html .= '<th>' . htmlspecialchars($key) . '</th>';
+    }
+    $html .= '</tr>';
+
+    foreach( $array as $key=>$value){
+        $html .= '<tr>';
+        foreach($value as $key2=>$value2){
+            $html .= '<td>' . htmlspecialchars($value2) . '</td>';
+        }
+        $html .= '</tr>';
+    }
+    $html .= '</table>';
+
+    $html .= '<script type="text/javascript">
+    function exportF(elem) {
+        var csv_data = [];
+        var rows = document.getElementsByTagName("tr");
+        for (var i = 0; i < rows.length; i++) {
+            var cols = rows[i].querySelectorAll("td,th");
+            var csvrow = [];
+            for (var j = 0; j < cols.length; j++) {
+                csvrow.push(cols[j].innerHTML);
+            }
+            csv_data.push(csvrow.join(","));
+        }
+        csv_data = csv_data.join("\n");
+
+        CSVFile = new Blob([csv_data], { type: "text/csv" });
+        var temp_link = document.createElement("a");
+        temp_link.download = "json.csv";
+        var url = window.URL.createObjectURL(CSVFile);
+        temp_link.href = url;
+        temp_link.style.display = "none";
+        document.body.appendChild(temp_link);
+        temp_link.click();
+        document.body.removeChild(temp_link);
+      }
+    </script>';
+
+    return t('<a id="downloadLink" onclick="exportF(this)">Export to CSV</a>'.$html);
+}
